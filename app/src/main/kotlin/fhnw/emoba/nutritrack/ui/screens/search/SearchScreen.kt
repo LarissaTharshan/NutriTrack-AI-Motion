@@ -18,6 +18,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import fhnw.emoba.nutritrack.data.model.Product
 import fhnw.emoba.nutritrack.ui.state.UiState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,49 +59,48 @@ fun SearchScreen(
                     label = { Text("z.B. Haferflocken") },
                     singleLine = true,
                     maxLines = 1,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { viewModel.search() }),
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = viewModel::search) {
-                    Icon(Icons.Default.Search, contentDescription = "Suchen")
+            }
+        }
+
+        when (val state = viewModel.uiState) {
+            is UiState.Idle -> {}
+            is UiState.Loading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text("Suche läuft...")
+                    }
                 }
             }
 
-            when (val state = viewModel.uiState) {
-                is UiState.Idle -> {}
-                is UiState.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            CircularProgressIndicator()
-                            Text("Suche laeuft...")
-                        }
-                    }
+            is UiState.Empty -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Keine Produkte gefunden.")
                 }
+            }
 
-                is UiState.Empty -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Keine Produkte gefunden.")
-                    }
+            is UiState.Error -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Fehler: ${state.message}", color = MaterialTheme.colorScheme.error)
                 }
+            }
 
-                is UiState.Error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Fehler: ${state.message}", color = MaterialTheme.colorScheme.error)
-                    }
-                }
-
-                is UiState.Success -> {
-                    LazyColumn(state = listState) {
-                        items(
-                            state.data,
-                            key = { it.name ?: it.hashCode().toString() }) { product ->
-                            ProductListItem(
-                                product = product,
-                                onClick = { viewModel.selectProduct(product) })
-                            HorizontalDivider()
-                        }
+            is UiState.Success -> {
+                LazyColumn(state = listState) {
+                    items(
+                        state.data,
+                        key = { it.name ?: it.hashCode().toString() }) { product ->
+                        ProductListItem(
+                            product = product,
+                            onClick = { viewModel.selectProduct(product) })
+                        HorizontalDivider()
                     }
                 }
             }
