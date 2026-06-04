@@ -1,5 +1,7 @@
 package fhnw.emoba.nutritrack.ui.screens.profile
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,6 +31,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import fhnw.emoba.nutritrack.ui.navigation.Screen
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,8 +43,20 @@ fun ProfileScreen(
     val context = LocalContext.current
 
     val avatarLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { viewModel.onAvatarSelected(it) } }
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        bitmap?.let {
+            val file = saveBitmapToFile(context, it)
+            val uri = Uri.fromFile(file)
+            viewModel.onAvatarSelected(uri)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) avatarLauncher.launch(null)
+    }
 
     Scaffold(
         topBar = {
@@ -62,7 +78,9 @@ fun ProfileScreen(
                     .size(100.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { avatarLauncher.launch("image/*") },
+                    .clickable {
+                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 if (viewModel.profile.avatarUri.isNotBlank()) {
@@ -77,7 +95,7 @@ fun ProfileScreen(
                 }
             }
             Text(
-                "Tippe für eigenes Bild",
+                "Tippe für Kamera-Foto",
                 style = MaterialTheme.typography.bodySmall
             )
 
@@ -188,4 +206,13 @@ private fun GoalTextField(label: String, value: String, onValueChange: (String) 
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+private fun saveBitmapToFile(context: Context, bitmap: Bitmap): File {
+    val file = File(context.cacheDir, "avatar_${System.currentTimeMillis()}.jpg")
+    val out = FileOutputStream(file)
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+    out.flush()
+    out.close()
+    return file
 }
