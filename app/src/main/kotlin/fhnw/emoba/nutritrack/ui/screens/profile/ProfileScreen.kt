@@ -1,10 +1,14 @@
 package fhnw.emoba.nutritrack.ui.screens.profile
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -31,6 +36,8 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
     val avatarLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { viewModel.onAvatarSelected(it) } }
@@ -49,6 +56,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -68,7 +76,52 @@ fun ProfileScreen(
                     Icon(Icons.Default.Person, null, modifier = Modifier.size(48.dp))
                 }
             }
-            Text("Tippe um Bild zu waehlen", style = MaterialTheme.typography.bodySmall)
+            Text(
+                "Tippe für eigenes Bild",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Text(
+                "Oder wähle einen Avatar:",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(viewModel.availableAvatars) { avatarName ->
+                    val resId = context.resources.getIdentifier(
+                        avatarName, "drawable", context.packageName
+                    )
+                    val isSelected = viewModel.profile.avatarUri.contains(avatarName)
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = if (isSelected) 3.dp else 1.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outline,
+                                shape = CircleShape
+                            )
+                            .clickable {
+                                val uri = Uri.parse(
+                                    "android.resource://${context.packageName}/$resId"
+                                )
+                                viewModel.onAvatarSelected(uri)
+                            }
+                    ) {
+                        AsyncImage(
+                            model = resId,
+                            contentDescription = avatarName,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = viewModel.nameInput,
@@ -91,7 +144,10 @@ fun ProfileScreen(
             GoalTextField("Fett (g)", viewModel.fatInput) { viewModel.fatInput = it }
 
             if (viewModel.saveSuccess) {
-                Text("Gespeichert!", color = MaterialTheme.colorScheme.primary)
+                Text(
+                    "Gespeichert!", color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Button(

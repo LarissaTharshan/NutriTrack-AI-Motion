@@ -26,6 +26,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     var isSaving by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
 
+    val availableAvatars = listOf(
+        "avatar_avocado", "avatar_dumbbell", "avatar_run",
+        "avatar_salad", "avatar_vegetable", "avatar_waterbottle"
+    )
+
     init {
         viewModelScope.launch {
             repository.userProfile.collect { saved ->
