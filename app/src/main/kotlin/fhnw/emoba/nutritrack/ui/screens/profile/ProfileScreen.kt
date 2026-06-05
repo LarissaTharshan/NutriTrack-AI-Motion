@@ -181,7 +181,7 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Speichern & Weiter", fontWeight = FontWeight.Bold)
+                    Text("Speichern", fontWeight = FontWeight.Bold)
                 }
             }
 

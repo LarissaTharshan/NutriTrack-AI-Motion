@@ -22,7 +22,7 @@ object RetrofitInstance {
 
     val api: OpenFoodFactsApi by lazy {
         Retrofit.Builder()
-            .baseUrl("https://world.openfoodfacts.org/")
+            .baseUrl("https://world.openfoodfacts.net/")
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
