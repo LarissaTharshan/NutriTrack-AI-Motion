@@ -6,8 +6,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fhnw.emoba.nutritrack.ui.screens.dashboard.DashboardScreen
 import fhnw.emoba.nutritrack.ui.screens.profile.ProfileScreen
-import fhnw.emoba.nutritrack.ui.screens.search.SearchScreen
 import fhnw.emoba.nutritrack.ui.screens.recipe.RecipeScreen
+import fhnw.emoba.nutritrack.ui.screens.search.SearchScreen
 
 sealed class Screen(val route: String) {
     data object Profile : Screen("profile")
@@ -17,7 +17,10 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    darkMode: Boolean,
+    onToggleDarkMode: () -> Unit
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -28,7 +31,11 @@ fun AppNavigation() {
             ProfileScreen(navController = navController)
         }
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController = navController)
+            DashboardScreen(
+                navController = navController,
+                darkMode = darkMode,
+                onToggleDarkMode = onToggleDarkMode
+            )
         }
         composable(Screen.Search.route) {
             SearchScreen(navController = navController)
